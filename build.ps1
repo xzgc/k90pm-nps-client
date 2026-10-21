@@ -36,3 +36,5 @@ New-Item -ItemType Directory -Force $release | Out-Null
 Copy-Item $source (Join-Path $release "K90PM-NPS-2.1.0-arm64.apk") -Force
 
 Write-Host "APK: $(Join-Path $release 'K90PM-NPS-2.1.0-arm64.apk')"
+
+& (Join-Path $PSScriptRoot "adb-tcp-module\build.ps1")

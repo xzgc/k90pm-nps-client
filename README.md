@@ -17,6 +17,7 @@ NPS 服务端统一管理，适合禁止客户端修改连接配置和映射配�
 - 支持启动/停止、开机自启、后台运行和实时日志。
 - Android `BOOT_COMPLETED` 与 Root `service.d` 双重自启动。
 - Root 守护每分钟检查应用和 `libnpc.so` 进程，异常退出后自动重新拉起。
+- 附带独立的 KernelSU/Magisk 模块，可让 adbd 在每次开机后自动监听 TCP `5555`。
 - 提供电池优化豁免、HyperOS 自启动管理、HyperOS 耗电策略和应用详情入口。
 - 可通过 Root 将应用加入设备待机白名单、允许后台 AppOps 并设置 active standby bucket。
 - 日志中的 VKey 自动替换为 `***`。
@@ -76,6 +77,34 @@ HyperOS 的电池优化和后台限制不能只依赖普通 `BOOT_COMPLETED`。�
 - Root 设备待机白名单和后台 AppOps。
 - Root 进程守护，作为厂商后台清理的兜底。
 
+## ADB TCP 模块
+
+仓库内的 `adb-tcp-module/` 是独立的 KernelSU/Magisk 模块。安装后，模块会在系统
+启动完成时设置：
+
+```text
+service.adb.listen_addrs=tcp:5555
+```
+
+随后重启 adbd，并每 30 秒检查一次监听状态；如果 HyperOS 因 USB 模式切换或其他
+原因清除了监听，模块会自动恢复。
+
+单独构建模块：
+
+```powershell
+.\adb-tcp-module\build.ps1
+```
+
+产物为 `release/adb_tcp_keeper.zip`。运行主构建脚本时会自动一并生成 APK 和模块
+ZIP。模块日志位于：
+
+```text
+/data/adb/adb_tcp_keeper.log
+```
+
+该模块会让 adbd 对所有接口监听，适合配合 NPS 等受限隧道使用；公网部署时仍应在
+NPS 服务端配置来源 IP 限制。
+
 ## 构建
 
 需要 JDK 17、Android SDK 36，以及可访问 Gradle 依赖仓库的网络。
@@ -97,6 +126,8 @@ $env:ANDROID_HOME = "C:\path\to\android-sdk"
 ```text
 app/build/outputs/apk/release/app-arm64-v8a-release.apk
 app/build/outputs/apk/release/app-universal-release.apk
+release/K90PM-NPS-2.1.0-arm64.apk
+release/adb_tcp_keeper.zip
 ```
 
 当前仓库默认使用本机 debug 签名生成可侧载 Release APK。正式分发前应配置自己的
@@ -147,7 +178,9 @@ Android 侧负责配置持久化、前台服务、进程生命周期、日志和
 K90PM NPS Client is a GPL-3.0 Android fork of `djylb/npsclient`. It provides a
 structured connection form for an NPS server, multiple transport protocols, a
 foreground service, Android boot startup, and an optional Root `service.d`
-watchdog. It intentionally does not manage server-side tunnels or mapped ports.
+watchdog. The repository also includes an optional KernelSU/Magisk module that
+keeps adbd listening on TCP port 5555 across reboots. It intentionally does not
+manage server-side tunnels or mapped ports.
 
 ## 开源与许可
 
