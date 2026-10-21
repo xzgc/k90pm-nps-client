@@ -1,0 +1,9 @@
+K90PM NPS Client
+Copyright (c) 2026 K90PM
+
+This project is a modified Android client based on:
+- djylb/npsclient (GPL-3.0)
+- djylb/nps / NPS Enhanced (GPL-3.0)
+- ehang-io/nps (GPL-3.0)
+
+The original copyright and license notices remain in effect.
